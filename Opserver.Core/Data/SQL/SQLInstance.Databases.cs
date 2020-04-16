@@ -1314,6 +1314,9 @@ Option (Recompile);";
             public decimal PercentIncrease { get; internal set; }
             public int NumberOfPlans { get; internal set; }
             public string QueryText { get; internal set; }
+            public DateTime? InitialCompileStartTimeRecent { get; internal set; }
+            public DateTime? LastCompileStartTimeRecent { get; internal set; }
+            public DateTime? LastExecutionTimeRecent { get; internal set; }
 
             public Version MinVersion => SQLServerVersions.SQL2014.RTM;
 
@@ -1330,7 +1333,11 @@ Option (Recompile);";
                 p.query_id query_id,
                 CONVERT(float, SUM(rs.avg_logical_io_reads*rs.count_executions)) total_logical_io_reads,
                 SUM(rs.count_executions) count_executions,
-                COUNT(distinct p.plan_id) num_plans
+                COUNT(distinct p.plan_id) num_plans--,
+				--(select top 1 p.initial_compile_start_time  FROM sys.query_store_runtime_stats rs WITH (NOLOCK)
+				--	JOIN sys.query_store_plan p ON p.plan_id = rs.plan_id
+				--	WHERE NOT (rs.first_execution_time > @history_end_time OR rs.last_execution_time < @history_start_time)
+				--	order by  p.initial_compile_start_time desc) as initial_compile_start_time
             FROM sys.query_store_runtime_stats rs WITH (NOLOCK)
             JOIN sys.query_store_plan p ON p.plan_id = rs.plan_id
             WHERE NOT (rs.first_execution_time > @history_end_time OR rs.last_execution_time < @history_start_time)
@@ -1342,7 +1349,8 @@ Option (Recompile);";
                 p.query_id query_id,
                 CONVERT(float, SUM(rs.avg_logical_io_reads*rs.count_executions)) total_logical_io_reads,
                 SUM(rs.count_executions) count_executions,
-                COUNT(distinct p.plan_id) num_plans
+                COUNT(distinct p.plan_id) num_plans--,
+
             FROM sys.query_store_runtime_stats rs WITH (NOLOCK)
             JOIN sys.query_store_plan p ON p.plan_id = rs.plan_id
             WHERE NOT (rs.first_execution_time > @recent_end_time OR rs.last_execution_time < @recent_start_time)
@@ -1361,7 +1369,26 @@ Option (Recompile);";
             ROUND(results.average_recent, 2) as AverageRecent,
             ROUND(results.average_hist, 2) as AverageHistorical,
             ROUND(((results.average_recent - results.average_hist) / results.average_hist) * 100, 2) as PercentIncrease,
-            queries.num_plans NumberOfPlans
+            queries.num_plans NumberOfPlans,
+			(select top 1 convert(datetime,p1.initial_compile_start_time) FROM sys.query_store_runtime_stats rs1 --WITH (NOLOCK)
+					JOIN sys.query_store_plan p1 ON p1.plan_id = rs1.plan_id
+					where p1.query_id = results.queryid
+					and NOT (rs1.first_execution_time > @recent_end_time OR rs1.last_execution_time < @recent_start_time)
+					order by  p1.initial_compile_start_time desc
+			) as InitialCompileStartTimeRecent,
+			(select top 1 convert(datetime,p1.last_compile_start_time) FROM sys.query_store_runtime_stats rs1 --WITH (NOLOCK)
+					JOIN sys.query_store_plan p1 ON p1.plan_id = rs1.plan_id
+					where p1.query_id = results.queryid
+					and NOT (rs1.first_execution_time > @recent_end_time OR rs1.last_execution_time < @recent_start_time)
+					order by  p1.last_compile_start_time desc
+			) as LastCompileStartTimeRecent,
+			(select top 1 convert(datetime,p1.last_execution_time) FROM sys.query_store_runtime_stats rs1 --WITH (NOLOCK)
+					JOIN sys.query_store_plan p1 ON p1.plan_id = rs1.plan_id
+					where p1.query_id = results.queryid
+					and NOT (rs1.first_execution_time > @recent_end_time OR rs1.last_execution_time < @recent_start_time)
+					order by  p1.last_execution_time desc
+			) as LastExecutionTimeRecent
+			
         FROM (      
             SELECT
                 hist.query_id queryid,
@@ -1390,9 +1417,7 @@ Option (Recompile);";
             ON queries.query_id = results.queryid
         WHERE additional_logical_io_reads_workload > 0
         ORDER BY additional_logical_io_reads_workload DESC
-        OPTION
-        (MERGE
-        JOIN);";
+       ";
             public string GetFetchSQL(Version v)
             {
                 var sqlFormat = "MM-dd-yyyy HH:mm";
