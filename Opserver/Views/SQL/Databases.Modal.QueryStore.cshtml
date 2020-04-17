@@ -9,10 +9,14 @@
 
     var cpuResult = s.GetQueryStoreCpuInfo(Model.Database);
     var cpuData = cpuResult.Data;
+
+    var durationResult = s.GetQueryStoreDurationInfo(Model.Database);
+    var durationData = durationResult.Data;
 }
 @section top {
     <span class="pull-right small">Reads @Helpers.PollNow(readsResult)</span>
     <span class="pull-right small">CPU @Helpers.PollNow(cpuResult)</span>
+    <span class="pull-right small">Duration @Helpers.PollNow(durationResult)</span>
 }
 @if (readsResult.Data == null || !readsResult.Successful)
 {
@@ -25,11 +29,12 @@ else
 {
     <div class="alert alert-dismissible alert-info" style="margin-bottom: 2px;">
         Query Store Analysis Top 25 by Logical Reads with more than one plan
-         
+
     </div>
     <div class="alert alert-warning">
-        Note: If there are multiple plans in the recent window 'Recent First Exec' 
-        will represent the first exec of the first plan 
+        Note: If there are multiple plans in the recent window 'Recent First Exec' will represent the first execution of the first recent plan.
+        <br/>
+        Recent window is 1 hour.
     </div>
     <table class="table table-striped table-hover text-nowrap table-super-condensed table-responsive js-database-indexes">
         <thead>
@@ -116,7 +121,6 @@ else
             }
         </tfoot>
     </table>
-
 
     <div class="alert alert-dismissible alert-info" style="margin-bottom: 2px;">
         Query Store Analysis Top 25 by CPU with more than one plan
@@ -206,6 +210,96 @@ else
             }
         </tfoot>
     </table>
+
+    <div class="alert alert-dismissible alert-info" style="margin-bottom: 2px;">
+        Query Store Analysis Top 25 by duration with more than one plan
+    </div>
+    <table class="table table-striped table-hover text-nowrap table-super-condensed table-responsive js-database-indexes">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Query Id</th>
+                <th>Historic Duration</th>
+                <th>Recent Duration</th>
+                <th>Avg Historic Duration</th>
+                <th>Avg Recent Duration</th>
+                <th>Extra Workload</th>
+                <th>% Increase</th>
+                <th>No. Execs</th>
+                <th>No. Plans</th>
+                <th>No. Plans Recent</th>
+                <th>Recent First Exec</th>
+                <th>Query</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var i in durationData)
+            {
+                <tr data-obj="@i.QueryId" class="js-next-collapsible">
+                    <td class="text-muted">
+                    </td>
+                    <td class="" data-val="@i.QueryId">
+                        @i.QueryId
+                    </td>
+                    <td class="" data-val="@i.TotalDurationHistorical">
+                        @i.TotalDurationHistorical
+                    </td>
+                    <td class="" data-val="@i.TotalDurationRecent">
+                        @i.TotalDurationRecent
+                    </td>
+                    <td class="" data-val="@i.AverageHistorical">
+                        @i.AverageHistorical
+                    </td>
+                    <td class="" data-val="@i.AverageRecent">
+                        @i.AverageRecent
+                    </td>
+                    <td class="" data-val="@i.AdditionalDurationWorkload">
+                        @i.AdditionalDurationWorkload
+                    </td>
+                    <td class="" data-val="@i.PercentIncrease">
+                        @i.PercentIncrease
+                    </td>
+                    <td class="" data-val="@i.CountOfExecutionsRecent">
+                        @i.CountOfExecutionsRecent
+                    </td>
+                    <td class="" data-val="@i.NumberOfPlans">
+                        @i.NumberOfPlans
+                    </td>
+                    <td class="" data-val="@i.NumberOfPlansRecent">
+                        @i.NumberOfPlansRecent
+                    </td>
+                    <td class="" data-val="@i.FirstExecutedRecent">
+                        @i.FirstExecutedRecent
+                    </td>
+                    <td class="">
+                        @(i.QueryText?.TruncateWithEllipsis(50))
+                    </td>
+                </tr>
+                <tr class="tablesorter-childRow hidden"></tr>
+
+                <tr class="tablesorter-childRow hidden"></tr>
+            }
+        </tbody>
+        <tfoot>
+            @if (!cpuResult.Data.Any())
+            {
+                <tr>
+                    <td colspan="8">
+                        <div class="no-content">No query store CPU data found.</div>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                <tr class="total-row">
+                    <td colspan="8">
+                        <b>Total</b> <span class="text-muted">(@cpuResult.Data.Count.Pluralize("result"))</span>
+                    </td>
+                </tr>
+            }
+        </tfoot>
+    </table>
+
     <script>
         $(function () {
             $('.js-database-indexes').tablesorter({
