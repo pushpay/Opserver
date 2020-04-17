@@ -11,7 +11,8 @@
     var cpuData = cpuResult.Data;
 }
 @section top {
-    <span class="pull-right small">@Helpers.PollNow(readsResult)</span>
+    <span class="pull-right small">Reads @Helpers.PollNow(readsResult)</span>
+    <span class="pull-right small">CPU @Helpers.PollNow(cpuResult)</span>
 }
 @if (readsResult.Data == null || !readsResult.Successful)
 {
@@ -38,9 +39,7 @@ else
                 <th>% Increase</th>
                 <th>Count of Execs</th>
                 <th>No. Plans</th>
-                <th>Recent Initial Compile</th>
-                <th>Recent Last Compile</th>
-                <th>Recent Last Exec</th>
+                <th>Recent First Exec</th>
                 <th>Query</th>
             </tr>
         </thead>
@@ -77,14 +76,8 @@ else
                     <td class="" data-val="@i.NumberOfPlans">
                         @i.NumberOfPlans
                     </td>
-                    <td class="" data-val="@i.InitialCompileStartTimeRecent">
-                        @i.InitialCompileStartTimeRecent
-                    </td>
-                    <td class="" data-val="@i.LastCompileStartTimeRecent">
-                        @i.LastCompileStartTimeRecent
-                    </td>
-                    <td class="" data-val="@i.LastExecutionTimeRecent">
-                        @i.LastExecutionTimeRecent
+                    <td class="" data-val="@i.FirstExecutedRecent">
+                        @i.FirstExecutedRecent
                     </td>
                     <td class="">
                         @(i.QueryText?.TruncateWithEllipsis(50))
@@ -132,9 +125,7 @@ else
                 <th>% Increase</th>
                 <th>Count of Execs</th>
                 <th>No. Plans</th>
-                <th>Recent Initial Compile</th>
-                <th>Recent Last Compile</th>
-                <th>Recent Last Exec</th>
+                <th>Recent First Exec</th>
                 <th>Query</th>
             </tr>
         </thead>
@@ -171,14 +162,8 @@ else
                     <td class="" data-val="@i.NumberOfPlans">
                         @i.NumberOfPlans
                     </td>
-                    <td class="" data-val="@i.InitialCompileStartTimeRecent">
-                        @i.InitialCompileStartTimeRecent
-                    </td>
-                    <td class="" data-val="@i.LastCompileStartTimeRecent">
-                        @i.LastCompileStartTimeRecent
-                    </td>
-                    <td class="" data-val="@i.LastExecutionTimeRecent">
-                        @i.LastExecutionTimeRecent
+                    <td class="" data-val="@i.FirstExecutedRecent">
+                        @i.FirstExecutedRecent
                     </td>
                     <td class="">
                         @(i.QueryText?.TruncateWithEllipsis(50))
@@ -190,7 +175,7 @@ else
             }
         </tbody>
         <tfoot>
-            @if (!readsResult.Data.Any())
+            @if (!cpuResult.Data.Any())
             {
                 <tr>
                     <td colspan="8">
@@ -202,7 +187,7 @@ else
             {
                 <tr class="total-row">
                     <td colspan="8">
-                        <b>Total</b> <span class="text-muted">(@readsResult.Data.Count.Pluralize("result"))</span>
+                        <b>Total</b> <span class="text-muted">(@cpuResult.Data.Count.Pluralize("result"))</span>
                     </td>
                 </tr>
             }
