@@ -15,7 +15,12 @@ namespace StackExchange.Opserver.Data.SQL
         {
             if (options == null)
                 throw new ArgumentNullException(nameof(options), "Active Operations requires options");
-
+            var temp = TimedCache("ActiveOperations-" + options.GetHashCode().ToString(),
+                conn => conn.Query<dynamic>(options.ToSQLQuery(), options, commandTimeout: 300)
+                    .Select(row => new ActiveOperation(row))
+                    .ToList(),
+                10.Seconds(), 5.Minutes());
+            
             return TimedCache("ActiveOperations-" + options.GetHashCode().ToString(),
                 conn => conn.Query<WhoIsActiveRow>(options.ToSQLQuery(), options, commandTimeout: 300)
                                 .Select(row => new ActiveOperation(row))

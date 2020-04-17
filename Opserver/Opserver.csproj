@@ -650,6 +650,7 @@
       <DependentUpon>Databases.Modal.cshtml</DependentUpon>
     </Content>
     <Content Include="Views\SQL\Databases.Modal.QueryStore.cshtml">
+        <Content Include="Views\SQL\Databases.Modal.BlitzCache.cshtml">
       <DependentUpon>Databases.Modal.cshtml</DependentUpon>
     </Content>
     <Content Include="Views\Redis\Server.Actions.cshtml" />

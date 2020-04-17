@@ -264,6 +264,9 @@ namespace StackExchange.Opserver.Controllers
                 case "querystore":
                     vd.View = DatabasesModel.Views.QueryStore;
                     return View("Databases.Modal.QueryStore", vd);
+                case "blitzcache":
+                    vd.View = DatabasesModel.Views.BlitzCache;
+                    return View("Databases.Modal.BlitzCache", vd);
             }
             return View("Databases.Modal.Tables", vd);
         }

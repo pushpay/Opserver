@@ -99,6 +99,9 @@ namespace StackExchange.Opserver.Data.SQL
         public LightweightCache<List<DatabaseQueryStoreDuration>> GetQueryStoreDurationInfo(string databaseName) =>
             DatabaseFetch<DatabaseQueryStoreDuration>(databaseName);
 
+        public LightweightCache<List<DatabaseBlitzCache>> GetBlitzCacheInfo(string databaseName) =>
+            DatabaseFetch<DatabaseBlitzCache>(databaseName);
+
         public Database GetDatabase(string databaseName) => Databases.Data?.FirstOrDefault(db => db.Name == databaseName);
 
         private LightweightCache<List<T>> DatabaseFetch<T>(string databaseName, TimeSpan? duration = null) where T : ISQLVersioned, new()
@@ -1640,5 +1643,34 @@ JOIN);
             }
         }
 
+
+
+        public class DatabaseBlitzCache : ISQLVersioned
+        {
+            public string Warnings { get; internal set; }
+            public string Database { get; internal set; }
+            public decimal Cost { get; internal set; }
+            public long ExecutionCount { get; internal set; }
+            public long ExecutionsPerMinute { get; internal set; }
+            public long PercentExecutions { get; internal set; }
+            public long TotalCPU { get; internal set; }
+            public long AverageCPU { get; internal set; }
+            public long PercentCPU { get; internal set; }
+            public long TotalDuration { get; internal set; }
+            public long AverageDuration { get; internal set; }
+            public long PercentDuration { get; internal set; }
+            public long TotalReads { get; internal set; }
+            public long AverageReads { get; internal set; }
+            public long PercentReads { get; internal set; }
+            public long TotalWrites { get; internal set; }
+            public long AverageWrites { get; internal set; }
+            public long PercentWrites { get; internal set; }
+            public long AverageReturnedRows { get; internal set; }
+            public DateTime? PlanCreationTime { get; internal set; }
+            public DateTime? LastExecutionTime { get; internal set; }
+            public string QueryText { get; internal set; }
+            public Version MinVersion => SQLServerVersions.SQL2008R2.RTM;
+            public string GetFetchSQL(Version v) => "exec sp_blitzcache @databasename = @databasename";
+        }
     }
 }
