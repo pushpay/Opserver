@@ -1420,7 +1420,7 @@ ORDER BY additional_logical_io_reads_workload DESC
             public string GetFetchSQL(Version v)
             {
                 var sqlFormat = "MM-dd-yyyy HH:mm";
-                var historyStart = DateTime.Now.AddDays(-30).ToString(sqlFormat);
+                var historyStart = DateTime.Now.AddDays(-7).ToString(sqlFormat);
                 var historyEnd = DateTime.Now.AddMinutes(-60).ToString(sqlFormat);
                 var windowStart = DateTime.Now.AddMinutes(-60).ToString(sqlFormat);
                 var windowEnd = DateTime.Now.ToString(sqlFormat);
@@ -1539,7 +1539,7 @@ ORDER BY additional_cpu_time_workload DESC
             public string GetFetchSQL(Version v)
             {
                 var sqlFormat = "MM-dd-yyyy HH:mm";
-                var historyStart = DateTime.Now.AddDays(-30).ToString(sqlFormat);
+                var historyStart = DateTime.Now.AddDays(-7).ToString(sqlFormat);
                 var historyEnd = DateTime.Now.AddMinutes(-60).ToString(sqlFormat);
                 var windowStart = DateTime.Now.AddMinutes(-60).ToString(sqlFormat);
                 var windowEnd = DateTime.Now.ToString(sqlFormat);
