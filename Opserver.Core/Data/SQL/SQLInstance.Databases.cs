@@ -1620,7 +1620,7 @@ recent AS
 	    COUNT(distinct p.plan_id) num_plans
 	FROM sys.query_store_plan p WITH (NOLOCK)
 	GROUP BY p.query_id
-	HAVING COUNT(distinct p.plan_id) >= 1
+	HAVING COUNT(distinct p.plan_id) >= 2
 ) AS queries ON queries.query_id = results.queryid
 WHERE additional_duration_workload > 0
 ORDER BY additional_duration_workload DESC
