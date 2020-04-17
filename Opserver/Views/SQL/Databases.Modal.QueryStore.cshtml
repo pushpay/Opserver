@@ -25,6 +25,11 @@ else
 {
     <div class="alert alert-dismissible alert-info" style="margin-bottom: 2px;">
         Query Store Analysis Top 25 by Logical Reads with more than one plan
+         
+    </div>
+    <div class="alert alert-warning">
+        Note: If there are multiple plans in the recent window 'Recent First Exec' 
+        will represent the first exec of the first plan 
     </div>
     <table class="table table-striped table-hover text-nowrap table-super-condensed table-responsive js-database-indexes">
         <thead>
@@ -37,8 +42,9 @@ else
                 <th>Avg Recent LR's</th>
                 <th>Extra Workload</th>
                 <th>% Increase</th>
-                <th>Count of Execs</th>
+                <th>No. Execs</th>
                 <th>No. Plans</th>
+                <th>No. Plans Recent</th>
                 <th>Recent First Exec</th>
                 <th>Query</th>
             </tr>
@@ -75,6 +81,9 @@ else
                     </td>
                     <td class="" data-val="@i.NumberOfPlans">
                         @i.NumberOfPlans
+                    </td>
+                    <td class="" data-val="@i.NumberOfPlansRecent">
+                        @i.NumberOfPlansRecent
                     </td>
                     <td class="" data-val="@i.FirstExecutedRecent">
                         @i.FirstExecutedRecent
@@ -123,8 +132,9 @@ else
                 <th>Avg Recent CPU</th>
                 <th>Extra Workload</th>
                 <th>% Increase</th>
-                <th>Count of Execs</th>
+                <th>No. Execs</th>
                 <th>No. Plans</th>
+                <th>No. Plans Recent</th>
                 <th>Recent First Exec</th>
                 <th>Query</th>
             </tr>
@@ -162,12 +172,15 @@ else
                     <td class="" data-val="@i.NumberOfPlans">
                         @i.NumberOfPlans
                     </td>
+                    <td class="" data-val="@i.NumberOfPlansRecent">
+                        @i.NumberOfPlansRecent
+                    </td>
                     <td class="" data-val="@i.FirstExecutedRecent">
                         @i.FirstExecutedRecent
                     </td>
                     <td class="">
                         @(i.QueryText?.TruncateWithEllipsis(50))
-                  
+                    </td>
                 </tr>
                 <tr class="tablesorter-childRow hidden"></tr>
 

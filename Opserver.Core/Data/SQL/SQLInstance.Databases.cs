@@ -1316,6 +1316,7 @@ Option (Recompile);";
             public decimal AverageHistorical { get; internal set; }
             public decimal PercentIncrease { get; internal set; }
             public int NumberOfPlans { get; internal set; }
+            public int NumberOfPlansRecent { get; internal set; }
             public string QueryText { get; internal set; }
             public DateTime? FirstExecutedRecent { get; internal set; }
 
@@ -1366,7 +1367,8 @@ SELECT TOP (@results_row_count)
     ROUND(results.average_hist, 2) as AverageHistorical,
     ROUND(((results.average_recent - results.average_hist) / results.average_hist) * 100, 2) as PercentIncrease,
     queries.num_plans NumberOfPlans,
-    results.recent_first_executed as FirstExecutedRecent
+    convert(DATETIME, results.recent_first_executed) as FirstExecutedRecent,
+	results.recent_plans as NumberOfPlansRecent
 FROM (      
     SELECT
         hist.query_id queryid,
@@ -1379,7 +1381,8 @@ FROM (
         hist.count_executions count_executions_hist,
         recent.total_logical_io_reads / ISNULL(recent.count_executions, 1) as average_recent,
         hist.total_logical_io_reads / ISNULL(hist.count_executions, 1) as average_hist,
-	recent.first_executed as recent_first_executed
+		recent.first_executed as recent_first_executed,
+		recent.num_plans as recent_plans
     FROM hist
         JOIN recent ON hist.query_id = recent.query_id
         JOIN sys.query_store_query q ON q.query_id = hist.query_id
@@ -1424,6 +1427,7 @@ OPTION
             public decimal PercentIncrease { get; internal set; }
             public int NumberOfPlans { get; internal set; }
             public string QueryText { get; internal set; }
+            public int NumberOfPlansRecent { get; internal set; }
             public DateTime? FirstExecutedRecent { get; internal set; }
             
             public Version MinVersion => SQLServerVersions.SQL2014.RTM;
@@ -1455,7 +1459,7 @@ recent AS
         SUM(rs.count_executions) count_executions,
         COUNT(distinct p.plan_id) num_plans,
     	MIN(rs.first_execution_time) first_executed
-		
+	
     FROM sys.query_store_runtime_stats rs WITH (NOLOCK)
     JOIN sys.query_store_plan p ON p.plan_id = rs.plan_id
     WHERE NOT (rs.first_execution_time > @recent_end_time OR rs.last_execution_time < @recent_start_time)
@@ -1475,7 +1479,8 @@ SELECT TOP (@results_row_count)
     ROUND(results.average_hist, 2) as AverageHistorical,
     ROUND(((results.average_recent - results.average_hist) / results.average_hist) * 100, 2) as PercentIncrease,
     queries.num_plans NumberOfPlans,
-	results.recent_first_executed as FirstExecutedRecent
+    convert(DATETIME, results.recent_first_executed) as FirstExecutedRecent,
+    results.recent_plans as NumberOfPlansRecent
 FROM (      
     SELECT
         hist.query_id queryid,
@@ -1488,7 +1493,8 @@ FROM (
         hist.count_executions count_executions_hist,
         recent.total_cpu_time / ISNULL(recent.count_executions, 1) as average_recent,
         hist.total_cpu_time / ISNULL(hist.count_executions, 1) as average_hist,
-	recent.first_executed as recent_first_executed
+	    recent.first_executed as recent_first_executed,
+	    recent.num_plans as recent_plans
     FROM hist 
         JOIN recent ON hist.query_id = recent.query_id
         JOIN sys.query_store_query q ON q.query_id = hist.query_id
@@ -1503,6 +1509,7 @@ WHERE additional_cpu_time_workload > 0
 ORDER BY additional_cpu_time_workload DESC
 OPTION
 (MERGE JOIN);
+
        ";
             public string GetFetchSQL(Version v)
             {
