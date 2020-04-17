@@ -23,7 +23,8 @@ namespace StackExchange.Opserver.Views.SQL
             Other = 7,
             Restores = 8,
             StoredProcedures = 9,
-            QueryStore = 10,
+            QueryStoreReads = 10,
+            QueryStoreCpu = 11,
         }
 
         public static string GetDatabaseClass(SQLInstance.Database db)

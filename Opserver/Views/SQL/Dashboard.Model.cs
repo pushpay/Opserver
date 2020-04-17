@@ -13,7 +13,6 @@ namespace StackExchange.Opserver.Views.SQL
         Top = 5,
         Connections = 6,
         Databases = 7,
-        QueryStore = 8
     }
 
     public class DashboardModel
