@@ -1316,10 +1316,9 @@ Option (Recompile);";
             public decimal AverageHistorical { get; internal set; }
             public decimal PercentIncrease { get; internal set; }
             public int NumberOfPlans { get; internal set; }
+            public int NumberOfPlansRecent { get; internal set; }
             public string QueryText { get; internal set; }
-            public DateTime? InitialCompileStartTimeRecent { get; internal set; }
-            public DateTime? LastCompileStartTimeRecent { get; internal set; }
-            public DateTime? LastExecutionTimeRecent { get; internal set; }
+            public DateTime? FirstExecutedRecent { get; internal set; }
 
             public Version MinVersion => SQLServerVersions.SQL2014.RTM;
 
@@ -1335,7 +1334,7 @@ WITH hist AS
         p.query_id query_id,
         CONVERT(float, SUM(rs.avg_logical_io_reads*rs.count_executions)) total_logical_io_reads,
         SUM(rs.count_executions) count_executions,
-        COUNT(distinct p.plan_id) num_plans--,
+        COUNT(distinct p.plan_id) num_plans
     FROM sys.query_store_runtime_stats rs WITH (NOLOCK)
     JOIN sys.query_store_plan p ON p.plan_id = rs.plan_id
     WHERE NOT (rs.first_execution_time > @history_end_time OR rs.last_execution_time < @history_start_time)
@@ -1347,7 +1346,8 @@ recent AS
         p.query_id query_id,
         CONVERT(float, SUM(rs.avg_logical_io_reads*rs.count_executions)) total_logical_io_reads,
         SUM(rs.count_executions) count_executions,
-        COUNT(distinct p.plan_id) num_plans
+        COUNT(distinct p.plan_id) num_plans,
+    	MIN(rs.first_execution_time) first_executed
     FROM sys.query_store_runtime_stats rs WITH (NOLOCK)
     JOIN sys.query_store_plan p ON p.plan_id = rs.plan_id
     WHERE NOT (rs.first_execution_time > @recent_end_time OR rs.last_execution_time < @recent_start_time)
@@ -1367,25 +1367,8 @@ SELECT TOP (@results_row_count)
     ROUND(results.average_hist, 2) as AverageHistorical,
     ROUND(((results.average_recent - results.average_hist) / results.average_hist) * 100, 2) as PercentIncrease,
     queries.num_plans NumberOfPlans,
-		(select top 1 convert(datetime,p1.initial_compile_start_time) FROM sys.query_store_runtime_stats rs1 --WITH (NOLOCK)
-				JOIN sys.query_store_plan p1 ON p1.plan_id = rs1.plan_id
-				where p1.query_id = results.queryid
-				and NOT (rs1.first_execution_time > @recent_end_time OR rs1.last_execution_time < @recent_start_time)
-				order by  p1.initial_compile_start_time desc
-		) as InitialCompileStartTimeRecent,
-		(select top 1 convert(datetime,p1.last_compile_start_time) FROM sys.query_store_runtime_stats rs1 --WITH (NOLOCK)
-				JOIN sys.query_store_plan p1 ON p1.plan_id = rs1.plan_id
-				where p1.query_id = results.queryid
-				and NOT (rs1.first_execution_time > @recent_end_time OR rs1.last_execution_time < @recent_start_time)
-				order by  p1.last_compile_start_time desc
-		) as LastCompileStartTimeRecent,
-		(select top 1 convert(datetime,p1.last_execution_time) FROM sys.query_store_runtime_stats rs1 --WITH (NOLOCK)
-				JOIN sys.query_store_plan p1 ON p1.plan_id = rs1.plan_id
-				where p1.query_id = results.queryid
-				and NOT (rs1.first_execution_time > @recent_end_time OR rs1.last_execution_time < @recent_start_time)
-				order by  p1.last_execution_time desc
-		) as LastExecutionTimeRecent
-			
+    convert(DATETIME, results.recent_first_executed) as FirstExecutedRecent,
+	results.recent_plans as NumberOfPlansRecent
 FROM (      
     SELECT
         hist.query_id queryid,
@@ -1397,7 +1380,9 @@ FROM (
         recent.count_executions count_executions_recent,
         hist.count_executions count_executions_hist,
         recent.total_logical_io_reads / ISNULL(recent.count_executions, 1) as average_recent,
-        hist.total_logical_io_reads / ISNULL(hist.count_executions, 1) as average_hist
+        hist.total_logical_io_reads / ISNULL(hist.count_executions, 1) as average_hist,
+		recent.first_executed as recent_first_executed,
+		recent.num_plans as recent_plans
     FROM hist
         JOIN recent ON hist.query_id = recent.query_id
         JOIN sys.query_store_query q ON q.query_id = hist.query_id
@@ -1410,13 +1395,13 @@ FROM (
         COUNT(distinct p.plan_id) num_plans
     FROM sys.query_store_plan p WITH (NOLOCK)
     GROUP BY p.query_id
-    HAVING COUNT(distinct p.plan_id) >= 1  ) AS queries
+    HAVING COUNT(distinct p.plan_id) >= 2  ) AS queries
     ON queries.query_id = results.queryid
 WHERE additional_logical_io_reads_workload > 0
 ORDER BY additional_logical_io_reads_workload DESC
-
-
-       ";
+OPTION
+(MERGE JOIN);
+";
             public string GetFetchSQL(Version v)
             {
                 var sqlFormat = "MM-dd-yyyy HH:mm";
@@ -1442,10 +1427,9 @@ ORDER BY additional_logical_io_reads_workload DESC
             public decimal PercentIncrease { get; internal set; }
             public int NumberOfPlans { get; internal set; }
             public string QueryText { get; internal set; }
-            public DateTime? InitialCompileStartTimeRecent { get; internal set; }
-            public DateTime? LastCompileStartTimeRecent { get; internal set; }
-            public DateTime? LastExecutionTimeRecent { get; internal set; }
-
+            public int NumberOfPlansRecent { get; internal set; }
+            public DateTime? FirstExecutedRecent { get; internal set; }
+            
             public Version MinVersion => SQLServerVersions.SQL2014.RTM;
 
             private string _sql = @"
@@ -1473,7 +1457,9 @@ recent AS
         p.query_id query_id, ROUND(CONVERT(float, 
         SUM(rs.avg_cpu_time*rs.count_executions))*0.001,2) total_cpu_time,
         SUM(rs.count_executions) count_executions,
-        COUNT(distinct p.plan_id) num_plans
+        COUNT(distinct p.plan_id) num_plans,
+    	MIN(rs.first_execution_time) first_executed
+	
     FROM sys.query_store_runtime_stats rs WITH (NOLOCK)
     JOIN sys.query_store_plan p ON p.plan_id = rs.plan_id
     WHERE NOT (rs.first_execution_time > @recent_end_time OR rs.last_execution_time < @recent_start_time)
@@ -1493,24 +1479,8 @@ SELECT TOP (@results_row_count)
     ROUND(results.average_hist, 2) as AverageHistorical,
     ROUND(((results.average_recent - results.average_hist) / results.average_hist) * 100, 2) as PercentIncrease,
     queries.num_plans NumberOfPlans,
-		(select top 1 convert(datetime,p1.initial_compile_start_time) FROM sys.query_store_runtime_stats rs1 --WITH (NOLOCK)
-				JOIN sys.query_store_plan p1 ON p1.plan_id = rs1.plan_id
-				where p1.query_id = results.queryid
-				and NOT (rs1.first_execution_time > @recent_end_time OR rs1.last_execution_time < @recent_start_time)
-				order by  p1.initial_compile_start_time desc
-		) as InitialCompileStartTimeRecent,
-		(select top 1 convert(datetime,p1.last_compile_start_time) FROM sys.query_store_runtime_stats rs1 --WITH (NOLOCK)
-				JOIN sys.query_store_plan p1 ON p1.plan_id = rs1.plan_id
-				where p1.query_id = results.queryid
-				and NOT (rs1.first_execution_time > @recent_end_time OR rs1.last_execution_time < @recent_start_time)
-				order by  p1.last_compile_start_time desc
-		) as LastCompileStartTimeRecent,
-		(select top 1 convert(datetime,p1.last_execution_time) FROM sys.query_store_runtime_stats rs1 --WITH (NOLOCK)
-				JOIN sys.query_store_plan p1 ON p1.plan_id = rs1.plan_id
-				where p1.query_id = results.queryid
-				and NOT (rs1.first_execution_time > @recent_end_time OR rs1.last_execution_time < @recent_start_time)
-				order by  p1.last_execution_time desc
-		) as LastExecutionTimeRecent
+    convert(DATETIME, results.recent_first_executed) as FirstExecutedRecent,
+    results.recent_plans as NumberOfPlansRecent
 FROM (      
     SELECT
         hist.query_id queryid,
@@ -1522,7 +1492,9 @@ FROM (
         recent.count_executions count_executions_recent,
         hist.count_executions count_executions_hist,
         recent.total_cpu_time / ISNULL(recent.count_executions, 1) as average_recent,
-        hist.total_cpu_time / ISNULL(hist.count_executions, 1) as average_hist
+        hist.total_cpu_time / ISNULL(hist.count_executions, 1) as average_hist,
+	    recent.first_executed as recent_first_executed,
+	    recent.num_plans as recent_plans
     FROM hist 
         JOIN recent ON hist.query_id = recent.query_id
         JOIN sys.query_store_query q ON q.query_id = hist.query_id
@@ -1532,9 +1504,12 @@ FROM (
     JOIN (      SELECT p.query_id query_id, COUNT(distinct p.plan_id) num_plans
     FROM sys.query_store_plan p WITH (NOLOCK)
     GROUP BY p.query_id
-    HAVING COUNT(distinct p.plan_id) >= 1  ) AS queries ON queries.query_id = results.queryid
+    HAVING COUNT(distinct p.plan_id) >= 2  ) AS queries ON queries.query_id = results.queryid
 WHERE additional_cpu_time_workload > 0
 ORDER BY additional_cpu_time_workload DESC
+OPTION
+(MERGE JOIN);
+
        ";
             public string GetFetchSQL(Version v)
             {

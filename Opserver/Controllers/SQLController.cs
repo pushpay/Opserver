@@ -261,12 +261,9 @@ namespace StackExchange.Opserver.Controllers
                 case "storedprocedures":
                     vd.View = DatabasesModel.Views.StoredProcedures;
                     return View("Databases.Modal.StoredProcedures", vd);
-                case "querystorecpu":
-                    vd.View = DatabasesModel.Views.QueryStoreCpu;
-                    return View("Databases.Modal.QueryStore.CPU", vd);
-                case "querystorereads":
-                    vd.View = DatabasesModel.Views.QueryStoreReads;
-                    return View("Databases.Modal.QueryStore.LogicalReads", vd);
+                case "querystore":
+                    vd.View = DatabasesModel.Views.QueryStore;
+                    return View("Databases.Modal.QueryStore", vd);
             }
             return View("Databases.Modal.Tables", vd);
         }
