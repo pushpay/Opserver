@@ -1410,7 +1410,7 @@ FROM (
         COUNT(distinct p.plan_id) num_plans
     FROM sys.query_store_plan p WITH (NOLOCK)
     GROUP BY p.query_id
-    HAVING COUNT(distinct p.plan_id) >= 1  ) AS queries
+    HAVING COUNT(distinct p.plan_id) >= 2  ) AS queries
     ON queries.query_id = results.queryid
 WHERE additional_logical_io_reads_workload > 0
 ORDER BY additional_logical_io_reads_workload DESC
@@ -1532,7 +1532,7 @@ FROM (
     JOIN (      SELECT p.query_id query_id, COUNT(distinct p.plan_id) num_plans
     FROM sys.query_store_plan p WITH (NOLOCK)
     GROUP BY p.query_id
-    HAVING COUNT(distinct p.plan_id) >= 1  ) AS queries ON queries.query_id = results.queryid
+    HAVING COUNT(distinct p.plan_id) >= 2  ) AS queries ON queries.query_id = results.queryid
 WHERE additional_cpu_time_workload > 0
 ORDER BY additional_cpu_time_workload DESC
        ";

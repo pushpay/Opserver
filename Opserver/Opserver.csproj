@@ -649,10 +649,7 @@
     <Content Include="Views\SQL\Databases.Modal.UnusedIndexes.cshtml">
       <DependentUpon>Databases.Modal.cshtml</DependentUpon>
     </Content>
-    <Content Include="Views\SQL\Databases.Modal.QueryStore.CPU.cshtml">
-      <DependentUpon>Databases.Modal.cshtml</DependentUpon>
-    </Content>
-    <Content Include="Views\SQL\Databases.Modal.QueryStore.LogicalReads.cshtml">
+    <Content Include="Views\SQL\Databases.Modal.QueryStore.cshtml">
       <DependentUpon>Databases.Modal.cshtml</DependentUpon>
     </Content>
     <Content Include="Views\Redis\Server.Actions.cshtml" />
