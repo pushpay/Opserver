@@ -109,8 +109,8 @@ namespace StackExchange.Opserver.Data.SQL
                     conn.ChangeDatabase(databaseName);
                     return conn.Query<DatabaseBlitzCache>(GetFetchSQL<DatabaseBlitzCache>(), new {databaseName = databaseName }, commandTimeout: 300).AsList();
                 },
-                (TimeSpan?) null ?? 0.Minutes(),
-                staleDuration: 0.Minutes());
+                (TimeSpan?) null ?? 5.Minutes(),
+                staleDuration: 5.Minutes());
 
             StitchInQueryStoreIds(databaseName, results);
 
@@ -136,15 +136,18 @@ namespace StackExchange.Opserver.Data.SQL
 
             if (!queryIdResults.Successful)
                 return;
-
-            foreach (var queryIdResult in queryIdResults.Data)
+            foreach (var cache in results.Data)
             {
-                var matching = results.Data
-                    .FirstOrDefault(x => x.SqlHandle.SequenceEqual(queryIdResult.SqlHandle));
-                if (matching != null)
+                cache.QueryIds = new List<long>();
+                cache.PlanIds = new List<long>();
+                var matching = queryIdResults.Data
+                    .Where(x => x.SqlHandle.SequenceEqual(cache.SqlHandle))
+                    .ToList();
+                if (matching.Any())
                 {
-                    matching.QueryId = queryIdResult.QueryId;
-                    matching.PlanId = queryIdResult.PlanId;
+                    
+                    cache.QueryIds = matching.Select(x => x.QueryId).Distinct().ToList();
+                    cache.PlanIds = matching.Select(x => x.PlanId).Distinct().ToList();
                 }
             }
         }
@@ -1815,6 +1818,8 @@ JOIN);
             public Version MinVersion => SQLServerVersions.SQL2008R2.RTM;
             public long QueryId { get; set; }
             public long PlanId { get; set; }
+            public List<long> QueryIds { get; set; }
+            public List<long> PlanIds { get; set; }
 
             public string GetFetchSQL(Version v) => "exec sp_blitzcache @databasename = @databasename";
         }

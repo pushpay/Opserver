@@ -26,8 +26,8 @@ else
         <thead>
             <tr>
                 <th></th>
-                <th>QueryId</th>
-                <th>PlanId</th>
+                <th>Query Ids</th>
+                <th>Plan Ids</th>
                 <th>Cost</th>
                 <th>Created</th>
                 <th>Last Executed</th>
@@ -43,14 +43,16 @@ else
         <tbody>
             @foreach (var i in data)
             {
-            <tr class="js-next-collapsible">
+            <tr data-obj="@(String.Join("", i.SqlHandle.Select(p => p.ToString()).ToArray()))" class="js-next-collapsible">
                 <td class="text-muted">
                 </td>
-                <td class="" data-val="@i.QueryId">
-                    @i.QueryId
+                <td class="" data-val="@(String.Join("", i.SqlHandle.Select(p => p.ToString()).ToArray()))">
+                    <a href="#/db/@(Model.Database)/blitzcache/@(String.Join("", i.SqlHandle.Select(p => p.ToString()).ToArray()))">
+                        @(String.Join(",", i.QueryIds.Select(p => p.ToString()).ToArray()).TruncateWithEllipsis(10))
+                    </a>
                 </td>
                 <td class="" data-val="@i.PlanId">
-                    @i.PlanId
+                    @(String.Join(",", i.PlanIds.Select(p=>p.ToString()).ToArray()).TruncateWithEllipsis(10))
                 </td>
                 <td class="" data-val="@i.Cost">
                     @i.Cost
@@ -83,8 +85,34 @@ else
                     @(i.QueryText?.TruncateWithEllipsis(50))
                 </td>
             </tr>
-             
-                <tr class="tablesorter-childRow hidden"></tr>
+                <tr class="tablesorter-childRow hidden text-wrap">
+                    <td colspan="13">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <table class="table-striped col-xs-12">
+                                    <thead>
+                                    <tr>
+                                        <th>Query Ids</th>
+                                        <th>Plan Ids</th>
+                                        
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>@(String.Join(",", i.QueryIds.Select(p => p.ToString()).ToArray())) </td>
+                                        <td>@(String.Join(",", i.PlanIds.Select(p => p.ToString()).ToArray())) </td>
+                                    </tr>       
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                @(Html.Raw(i.QueryText?.Replace("      ", "<br>")))
+                            </div>
+                        </div>
+                    </td>
+                </tr>
 
                 <tr class="tablesorter-childRow hidden"></tr>
             }
