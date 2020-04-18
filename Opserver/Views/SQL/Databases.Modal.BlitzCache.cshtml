@@ -26,6 +26,8 @@ else
         <thead>
             <tr>
                 <th></th>
+                <th>QueryId</th>
+                <th>PlanId</th>
                 <th>Cost</th>
                 <th>Created</th>
                 <th>Last Executed</th>
@@ -44,10 +46,15 @@ else
             <tr class="js-next-collapsible">
                 <td class="text-muted">
                 </td>
+                <td class="" data-val="@i.QueryId">
+                    @i.QueryId
+                </td>
+                <td class="" data-val="@i.PlanId">
+                    @i.PlanId
+                </td>
                 <td class="" data-val="@i.Cost">
                     @i.Cost
                 </td>
-               
                 <td class="" data-val="@i.PlanCreationTime">
                     @i.PlanCreationTime
                 </td>

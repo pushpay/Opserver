@@ -3,6 +3,7 @@ using EnumsNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace StackExchange.Opserver.Data.SQL
@@ -99,8 +100,148 @@ namespace StackExchange.Opserver.Data.SQL
         public LightweightCache<List<DatabaseQueryStoreDuration>> GetQueryStoreDurationInfo(string databaseName) =>
             DatabaseFetch<DatabaseQueryStoreDuration>(databaseName);
 
-        public LightweightCache<List<DatabaseBlitzCache>> GetBlitzCacheInfo(string databaseName) =>
-            DatabaseFetch<DatabaseBlitzCache>(databaseName);
+        public LightweightCache<List<DatabaseBlitzCache>> GetBlitzCacheInfo(string databaseName)
+        {
+            SqlMapper.SetTypeMap(typeof(DatabaseBlitzCache), new RemoveSpacesMap<DatabaseBlitzCache>());
+            var results = TimedCache(typeof(DatabaseBlitzCache).Name + "Info-" + databaseName,
+                conn =>
+                {
+                    conn.ChangeDatabase(databaseName);
+                    return conn.Query<DatabaseBlitzCache>(GetFetchSQL<DatabaseBlitzCache>(), new {databaseName = databaseName }, commandTimeout: 300).AsList();
+                },
+                (TimeSpan?) null ?? 0.Minutes(),
+                staleDuration: 0.Minutes());
+
+            StitchInQueryStoreIds(databaseName, results);
+
+            return results;
+        }
+
+        private void StitchInQueryStoreIds(string databaseName, LightweightCache<List<DatabaseBlitzCache>> results)
+        {
+            if(!results.Successful)
+                return;
+
+            var listOfHandles = results.Data.Select(x => x.SqlHandle).Take(25);
+
+            var queryIdResults = TimedCache(typeof(DatabaseResolveSqlHandleToQueryIds).Name + "Info-" + databaseName,
+                conn =>
+                {
+                    conn.ChangeDatabase(databaseName);
+                    return conn.Query<DatabaseResolveSqlHandleToQueryIds>(GetFetchSQL<DatabaseResolveSqlHandleToQueryIds>(),
+                        new {databaseName = databaseName, sqlHandles = listOfHandles}).AsList();
+                },
+                (TimeSpan?) null ?? 0.Minutes(),
+                staleDuration: 0.Minutes());
+
+            if (!queryIdResults.Successful)
+                return;
+
+            foreach (var queryIdResult in queryIdResults.Data)
+            {
+                var matching = results.Data
+                    .FirstOrDefault(x => x.SqlHandle.SequenceEqual(queryIdResult.SqlHandle));
+                if (matching != null)
+                {
+                    matching.QueryId = queryIdResult.QueryId;
+                    matching.PlanId = queryIdResult.PlanId;
+                }
+            }
+        }
+
+        public class DatabaseResolveSqlHandleToQueryIds : ISQLVersioned
+        {
+            public long QueryId { get; internal set; }
+            public long PlanId { get; internal set; }
+            public byte[] SqlHandle { get; internal set; }
+            public Version MinVersion => SQLServerVersions.SQL2008.RTM;
+            public string GetFetchSQL(Version v) => @"SELECT eqs.query_hash, qsp.query_plan_hash, eqs.last_compile_batch_sql_handle as SqlHandle,
+qsp.query_id as queryId, qsp.plan_id as planId
+FROM sys.query_store_query eqs INNER JOIN sys.query_store_plan qsp
+ON eqs.query_id = qsp.query_id
+WHERE eqs.last_compile_batch_sql_handle in @sqlHandles
+";
+        }
+
+        class RemoveSpacesMap<T> : Dapper.SqlMapper.ITypeMap
+        {
+
+            private readonly Type _type;
+            private readonly List<PropertyInfo> _properties;
+
+            public RemoveSpacesMap()
+            {
+                _type = typeof(T);
+                _properties = GetSettableProps(_type);
+            }
+
+            public SqlMapper.IMemberMap GetMember(string columnName)
+            {
+                columnName = columnName.Replace(" ", "");
+                var property = _properties.Find(p => string.Equals(p.Name, columnName, StringComparison.Ordinal))
+                               ?? _properties.Find(p => string.Equals(p.Name, columnName, StringComparison.OrdinalIgnoreCase));
+
+                if (property == null )
+                {
+                    property = _properties.Find(p => string.Equals(p.Name, columnName.Replace("_", ""), StringComparison.Ordinal))
+                               ?? _properties.Find(p => string.Equals(p.Name, columnName.Replace("_", ""), StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (property != null)
+                    return new SimpleMemberMap(columnName, property);
+
+
+                return null;
+            }
+
+            static List<PropertyInfo> GetSettableProps(Type t)
+            {
+                return t
+                    .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(p => GetPropertySetter(p, t) != null)
+                    .ToList();
+            }
+            
+            static MethodInfo GetPropertySetter(PropertyInfo propertyInfo, Type type)
+            {
+                if (propertyInfo.DeclaringType == type) return propertyInfo.GetSetMethod(true);
+
+                return propertyInfo.DeclaringType.GetProperty(
+                    propertyInfo.Name,
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    Type.DefaultBinder,
+                    propertyInfo.PropertyType,
+                    propertyInfo.GetIndexParameters().Select(p => p.ParameterType).ToArray(),
+                    null).GetSetMethod(true);
+            }
+
+             System.Reflection.ConstructorInfo SqlMapper.ITypeMap.FindConstructor(string[] names, Type[] types) => _type.GetConstructor(new Type[0]);
+
+            ConstructorInfo SqlMapper.ITypeMap.FindExplicitConstructor() => null;
+
+            SqlMapper.IMemberMap SqlMapper.ITypeMap.GetConstructorParameter(
+                System.Reflection.ConstructorInfo constructor, string columnName) => null;
+
+            class SimpleMemberMap : SqlMapper.IMemberMap
+            {
+
+                public SimpleMemberMap(string columnName, PropertyInfo property)
+                {
+                    ColumnName = columnName ?? throw new ArgumentNullException(nameof(columnName));
+                    Property = property ?? throw new ArgumentNullException(nameof(property));
+                }
+
+                public string ColumnName { get; }
+
+                public Type MemberType => Field?.FieldType ?? Property?.PropertyType ?? Parameter?.ParameterType;
+
+                public PropertyInfo Property { get; }
+
+                public FieldInfo Field { get; }
+
+                public ParameterInfo Parameter { get; }
+            }
+        }
 
         public Database GetDatabase(string databaseName) => Databases.Data?.FirstOrDefault(db => db.Name == databaseName);
 
@@ -1666,10 +1807,15 @@ JOIN);
             public long AverageWrites { get; internal set; }
             public long PercentWrites { get; internal set; }
             public long AverageReturnedRows { get; internal set; }
+            public byte[] SqlHandle { get; internal set; }
+            public string SetOptions { get; internal set; }
             public DateTime? PlanCreationTime { get; internal set; }
             public DateTime? LastExecutionTime { get; internal set; }
             public string QueryText { get; internal set; }
             public Version MinVersion => SQLServerVersions.SQL2008R2.RTM;
+            public long QueryId { get; set; }
+            public long PlanId { get; set; }
+
             public string GetFetchSQL(Version v) => "exec sp_blitzcache @databasename = @databasename";
         }
     }
