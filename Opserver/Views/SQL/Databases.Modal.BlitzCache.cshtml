@@ -94,13 +94,14 @@ else
                                     <tr>
                                         <th>Query Ids</th>
                                         <th>Plan Ids</th>
-                                        
+                                        <th>Warnings</th>
                                     </tr>
                                     </thead>
                                     <tbody>
                                     <tr>
                                         <td>@(String.Join(",", i.QueryIds.Select(p => p.ToString()).ToArray())) </td>
                                         <td>@(String.Join(",", i.PlanIds.Select(p => p.ToString()).ToArray())) </td>
+                                        <td>@i.Warnings</td>
                                     </tr>       
                                     </tbody>
                                 </table>
