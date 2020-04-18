@@ -73,7 +73,6 @@ namespace StackExchange.Opserver
             Current.Settings.OnChanged += HttpRuntime.UnloadAppDomain;
 
             PollingEngine.Configure(t => HostingEnvironment.QueueBackgroundWorkItem(_ => t()));
-
         }
 
         protected void Application_End()
