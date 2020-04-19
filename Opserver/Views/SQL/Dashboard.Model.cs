@@ -13,7 +13,8 @@ namespace StackExchange.Opserver.Views.SQL
         Top = 5,
         Connections = 6,
         Databases = 7,
-        QueryStore = 8
+        QueryStore = 8,
+        BlitzCache = 9,
     }
 
     public class DashboardModel

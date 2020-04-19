@@ -24,6 +24,7 @@ namespace StackExchange.Opserver.Views.SQL
             Restores = 8,
             StoredProcedures = 9,
             QueryStore = 10,
+            BlitzCache = 11,
         }
 
         public static string GetDatabaseClass(SQLInstance.Database db)
