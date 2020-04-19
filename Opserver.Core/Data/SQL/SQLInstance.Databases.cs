@@ -124,23 +124,29 @@ namespace StackExchange.Opserver.Data.SQL
 
             var listOfHandles = results.Data.Select(x => x.SqlHandle).Take(25);
 
-            var queryIdResults = TimedCache(typeof(DatabaseResolveSqlHandleToQueryIds).Name + "Info-" + databaseName,
-                conn =>
+            List<DatabaseResolveSqlHandleToQueryIds> queryIdResults = null;
+            try
+            {
+                using (var conn = GetConnection())
                 {
                     conn.ChangeDatabase(databaseName);
-                    return conn.Query<DatabaseResolveSqlHandleToQueryIds>(GetFetchSQL<DatabaseResolveSqlHandleToQueryIds>(),
-                        new {databaseName = databaseName, sqlHandles = listOfHandles}).AsList();
-                },
-                (TimeSpan?) null ?? 0.Minutes(),
-                staleDuration: 0.Minutes());
+                    queryIdResults = conn.Query<DatabaseResolveSqlHandleToQueryIds>(GetFetchSQL<DatabaseResolveSqlHandleToQueryIds>(),
+                        new { databaseName = databaseName, sqlHandles = listOfHandles }).AsList();
+                }
+            }
 
-            if (!queryIdResults.Successful)
+            catch (Exception)
+            {
+                // ignored - will need to log this somewhere
+            }
+
+            if (queryIdResults?.Any() != true)
                 return;
             foreach (var cache in results.Data)
             {
                 cache.QueryIds = new List<long>();
                 cache.PlanIds = new List<long>();
-                var matching = queryIdResults.Data
+                var matching = queryIdResults
                     .Where(x => x.SqlHandle.SequenceEqual(cache.SqlHandle))
                     .ToList();
                 if (matching.Any())
@@ -1811,6 +1817,7 @@ JOIN);
             public long PercentWrites { get; internal set; }
             public long AverageReturnedRows { get; internal set; }
             public byte[] SqlHandle { get; internal set; }
+            public byte[] PlanHandle { get; internal set; }
             public string SetOptions { get; internal set; }
             public DateTime? PlanCreationTime { get; internal set; }
             public DateTime? LastExecutionTime { get; internal set; }

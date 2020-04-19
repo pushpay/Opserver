@@ -145,12 +145,17 @@ else
         $(function () {
             $('.js-database-indexes').tablesorter({
                 headers: {
+                    0: { sorter: 'dataVal', sortInitialOrder: 'desc' },
+                    1: { sorter: 'dataVal', sortInitialOrder: 'desc' },
+                    2: { sorter: 'dataVal', sortInitialOrder: 'desc' },
                     3: { sorter: 'dataVal', sortInitialOrder: 'desc' },
                     4: { sorter: 'dataVal', sortInitialOrder: 'desc' },
                     5: { sorter: 'dataVal', sortInitialOrder: 'desc' },
                     6: { sorter: 'dataVal', sortInitialOrder: 'desc' },
                     7: { sorter: 'dataVal', sortInitialOrder: 'desc' },
-                    8: { sorter: 'dataVal', sortInitialOrder: 'desc' }
+                    8: { sorter: 'dataVal', sortInitialOrder: 'desc' },
+                    9: { sorter: 'dataVal', sortInitialOrder: 'desc' },
+                    10: { sorter: 'dataVal', sortInitialOrder: 'desc' }
                 }
             });
             Status.highlight();
@@ -160,5 +165,5 @@ else
 
 @helper CreateId(SQLInstance.DatabaseBlitzCache data)
 {
-    @(String.Join("", data.SqlHandle.Select(p => p.ToString()).ToArray()) + String.Join("", data.SqlHandle.Select(p => p.ToString()).ToArray()))
+    @(String.Join("", data.SqlHandle.Select(p => p.ToString()).ToArray()) + String.Join("", data.PlanHandle.Select(p => p.ToString()).ToArray()))
 }
