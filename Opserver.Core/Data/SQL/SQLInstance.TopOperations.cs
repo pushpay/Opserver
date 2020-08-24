@@ -214,7 +214,7 @@ FROM (SELECT TOP (@MaxResultCount)
 
             public static readonly TopSearchOptions Default = new TopSearchOptions().SetDefaults();
 
-            private const int DefaultMinExecs = 2;
+            private const int DefaultMinExecs = 1;
             private const int DefaultLastRunSeconds = 24*60*60;
             private const int DefaultMaxResultCount = 100;
 
