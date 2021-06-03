@@ -51,6 +51,9 @@ namespace StackExchange.Opserver.Data.SQL
             public long AvgReads { get; internal set; }
             public long TotalReads { get; internal set; }
             public decimal PercentReads { get; internal set; }
+            public long AvgWrites { get; internal set; }
+            public long TotalWrites { get; internal set; }
+            public decimal PercentWrites { get; internal set; }
             public long ExecutionCount { get; internal set; }
             public decimal PercentExecutions { get; internal set; }
             public decimal ExecutionsPerMinute { get; internal set; }
