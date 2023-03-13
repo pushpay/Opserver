@@ -17,8 +17,21 @@ Task("Clean")
         DeleteFiles("**/*.nupkg");
     });
 
-Task("Build")
+Task("Restore")
     .IsDependentOn("Clean")
+    .Does(() =>
+    {
+        var solutions = GetFiles("./Opserver.sln");
+
+        foreach(var solution in solutions)
+        {
+            Information("Restoring {0}", solution);
+            NuGetRestore(solution);
+        }
+    });
+
+Task("Build")
+    .IsDependentOn("Restore")
     .Does(() =>
     {
         MSBuild("./Opserver.sln", new MSBuildSettings
