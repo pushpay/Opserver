@@ -1,4 +1,3 @@
-def upload
 pipeline {
     agent { label 'windows' }
     environment {
