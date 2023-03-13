@@ -1,0 +1,76 @@
+def upload
+pipeline {
+    agent { label 'windows' }
+    environment {
+        VERSION = getVersion()
+        OCTOPUS_API_KEY = credentials('octopus-api-key')
+    }
+    stages {
+        stage ('Build with Cake') {
+            steps {
+                script {
+                    def status = powershell(returnStatus: true, script: "./build.ps1")
+                    if (status != 0) {
+                        // Use SUCCESS FAILURE or ABORTED
+                        currentBuild.result = "FAILURE"
+                        throw new Exception("Exit code from Cake Build: ${status}.")
+                    }
+                }
+            }
+        }
+        stage ('Push Package to Octopus') {
+            when { branch 'master' }
+            steps {
+                script {
+                    def status = powershell(returnStatus: true, script: './build.ps1 --target "Push"')
+                    if (status != 0) {
+                        // Use SUCCESS FAILURE or ABORTED
+                        currentBuild.result = "FAILURE"
+                        throw new Exception("Exit code from Package Push: ${status}.")
+                    }
+                }
+            }
+        }
+        stage ('Trigger Octopus Release Creation') {
+            when { branch 'master' }
+            steps {
+                script {
+                    def triggerScript = """
+                        D:/Tools/OctopusTools/*/Octo.exe create-release --server https://octopus.rktapps.com `
+                                                                        --apikey ${env.OCTOPUS_API_KEY} `
+                                                                        --project "Opserver" `
+                                                                        --enableservicemessages `
+                                                                        --version ${env.VERSION} `
+                                                                        --progress `
+                                                                        --ignoreSslErrors `
+                                                                        --ignoreexisting `
+                                                                        --force `
+                                                                        --deploymenttimeout 00:30:00 `
+                                                                        --waitfordeployment `
+                                                                        --package="StackExchange.Opserver":${env.VERSION}
+                    """
+
+                    def status = powershell(returnStatus: true, script: triggerScript)
+                    if (status != 0) {
+                        // Use SUCCESS FAILURE or ABORTED
+                        currentBuild.result = "FAILURE"
+                        throw new Exception("Exit code Ocropus Trigger: ${status}.")
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: "**/StackExchange.Opserver.*.nupkg", fingerprint: true, allowEmptyArchive: true
+        }
+    }
+}
+
+def getVersion() {
+    if(env.BRANCH_NAME == "master") {
+        return "1.1.0.${BUILD_NUMBER}"
+    }
+
+    return "1.1.1.${BUILD_NUMBER}"
+}
