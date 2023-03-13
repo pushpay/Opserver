@@ -19,7 +19,7 @@ pipeline {
             }
         }
         stage ('Push Package to Octopus') {
-            when { branch 'master' }
+            when { branch 'pushpay_master' }
             steps {
                 script {
                     def status = powershell(returnStatus: true, script: './build.ps1 --target "Push"')
@@ -32,7 +32,7 @@ pipeline {
             }
         }
         stage ('Trigger Octopus Release Creation') {
-            when { branch 'master' }
+            when { branch 'pushpay_master' }
             steps {
                 script {
                     def triggerScript = """
