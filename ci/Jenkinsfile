@@ -1,4 +1,3 @@
-def upload
 pipeline {
     agent { label 'windows' }
     environment {
@@ -35,20 +34,20 @@ pipeline {
             when { branch 'pushpay_master' }
             steps {
                 script {
-                    def triggerScript = """
+                    def triggerScript = '''
                         D:/Tools/OctopusTools/*/Octo.exe create-release --server https://octopus.rktapps.com `
-                                                                        --apikey ${env.OCTOPUS_API_KEY} `
+                                                                        --apikey $($env:OCTOPUS_API_KEY) `
                                                                         --project "Opserver" `
                                                                         --enableservicemessages `
-                                                                        --version ${env.VERSION} `
+                                                                        --version $($env:VERSION) `
                                                                         --progress `
                                                                         --ignoreSslErrors `
                                                                         --ignoreexisting `
                                                                         --force `
                                                                         --deploymenttimeout 00:30:00 `
                                                                         --waitfordeployment `
-                                                                        --package="StackExchange.Opserver":${env.VERSION}
-                    """
+                                                                        --package="StackExchange.Opserver":$($env:VERSION)
+                    '''
 
                     def status = powershell(returnStatus: true, script: triggerScript)
                     if (status != 0) {
