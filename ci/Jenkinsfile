@@ -67,7 +67,7 @@ pipeline {
 }
 
 def getVersion() {
-    if(env.BRANCH_NAME == "master") {
+    if(env.BRANCH_NAME == "pushpay_master") {
         return "1.1.0.${BUILD_NUMBER}"
     }
 
