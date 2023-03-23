@@ -34,6 +34,8 @@ pipeline {
             // when { branch 'pushpay_master' }
             steps {
                 script {
+                    echo "${VERSION} | ${GIT_URL} | ${GIT_BRANCH} | ${GIT_COMMIT}"
+
                     octopusPushBuildInformation \
                         toolId: 'windows-octo', \
                         serverId: 'rktstack-octopus-windows', \
@@ -41,12 +43,12 @@ pipeline {
                         commentParser: 'GitHub', \
                         overwriteMode: 'FailIfExists', \
                         packageId: 'StackExchange.Opserver', \
-                        packageVersion: '${VERSION}', \
+                        packageVersion: "${VERSION}", \
                         verboseLogging: false, \
                         additionalArgs: '--debug', \
-                        gitUrl: '${GIT_URL}', \
-                        gitBranch: '${GIT_BRANCH}', \
-                        gitCommit: '${GIT_COMMIT}'
+                        gitUrl: "${GIT_URL}", \
+                        gitBranch: "${GIT_BRANCH}", \
+                        gitCommit: "${GIT_COMMIT}"
                 }
             }
         }
