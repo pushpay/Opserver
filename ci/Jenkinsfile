@@ -18,7 +18,7 @@ pipeline {
             }
         }
         stage ('Push Package to Octopus') {
-            when { branch 'pushpay_master' }
+            // when { branch 'pushpay_master' }
             steps {
                 script {
                     def status = powershell(returnStatus: true, script: './build.ps1 --target "Push"')
@@ -27,6 +27,26 @@ pipeline {
                         currentBuild.result = "FAILURE"
                         throw new Exception("Exit code from Package Push: ${status}.")
                     }
+                }
+            }
+        }
+        stage ('Push Package Information to Octopus') {
+            // when { branch 'pushpay_master' }
+            steps {
+                script {
+                    octopusPushBuildInformation \
+                        toolId: 'windows-octo', \
+                        serverId: 'rktstack-octopus-windows', \
+                        spaceId: 'Spaces-1', \
+                        commentParser: 'GitHub', \
+                        overwriteMode: 'FailIfExists', \
+                        packageId: 'StackExchange.Opserver', \
+                        packageVersion: '${env.VERSION}', \
+                        verboseLogging: false, \
+                        additionalArgs: '--debug', \
+                        gitUrl: '${GIT_URL}', \
+                        gitBranch: '${GIT_BRANCH}', \
+                        gitCommit: '${GIT_COMMIT}'
                 }
             }
         }
