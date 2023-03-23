@@ -41,7 +41,7 @@ pipeline {
                         commentParser: 'GitHub', \
                         overwriteMode: 'FailIfExists', \
                         packageId: 'StackExchange.Opserver', \
-                        packageVersion: '${env.VERSION}', \
+                        packageVersion: '${VERSION}', \
                         verboseLogging: false, \
                         additionalArgs: '--debug', \
                         gitUrl: '${GIT_URL}', \
