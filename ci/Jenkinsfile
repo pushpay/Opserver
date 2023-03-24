@@ -44,7 +44,7 @@ pipeline {
                         overwriteMode: 'FailIfExists', \
                         packageId: 'StackExchange.Opserver', \
                         packageVersion: "${VERSION}", \
-                        verboseLogging: false, \
+                        verboseLogging: true, \
                         additionalArgs: '--debug', \
                         gitUrl: "${GIT_URL}", \
                         gitBranch: "${GIT_BRANCH}", \
