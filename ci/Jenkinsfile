@@ -34,8 +34,6 @@ pipeline {
             when { branch 'pushpay_master' }
             steps {
                 script {
-                    echo "${VERSION} | ${GIT_URL} | ${GIT_BRANCH} | ${GIT_COMMIT}"
-
                     octopusPushBuildInformation \
                         toolId: 'windows-octo', \
                         serverId: 'rktstack-octopus-windows', \
