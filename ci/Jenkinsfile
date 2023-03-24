@@ -18,7 +18,7 @@ pipeline {
             }
         }
         stage ('Push Package to Octopus') {
-            // when { branch 'pushpay_master' }
+            when { branch 'pushpay_master' }
             steps {
                 script {
                     def status = powershell(returnStatus: true, script: './build.ps1 --target "Push"')
@@ -31,7 +31,7 @@ pipeline {
             }
         }
         stage ('Push Package Information to Octopus') {
-            // when { branch 'pushpay_master' }
+            when { branch 'pushpay_master' }
             steps {
                 script {
                     echo "${VERSION} | ${GIT_URL} | ${GIT_BRANCH} | ${GIT_COMMIT}"
