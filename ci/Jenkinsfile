@@ -36,7 +36,7 @@ pipeline {
                 script {
                     octopusPushBuildInformation \
                         toolId: 'windows-octo', \
-                        serverId: 'rktstack-octopus-windows', \
+                        serverId: 'rktapps-octopus', \
                         spaceId: 'Spaces-1', \
                         commentParser: 'GitHub', \
                         overwriteMode: 'FailIfExists', \
