@@ -30,6 +30,25 @@ pipeline {
                 }
             }
         }
+        stage ('Push Package Information to Octopus') {
+            when { branch 'pushpay_master' }
+            steps {
+                script {
+                    octopusPushBuildInformation \
+                        toolId: 'windows-octo', \
+                        serverId: 'rktstack-octopus-windows', \
+                        spaceId: 'Spaces-1', \
+                        commentParser: 'GitHub', \
+                        overwriteMode: 'FailIfExists', \
+                        packageId: 'StackExchange.Opserver', \
+                        packageVersion: "${VERSION}", \
+                        verboseLogging: false, \
+                        gitUrl: "${GIT_URL}", \
+                        gitBranch: "${GIT_BRANCH}", \
+                        gitCommit: "${GIT_COMMIT}"
+                }
+            }
+        }
         stage ('Trigger Octopus Release Creation') {
             when { branch 'pushpay_master' }
             steps {
