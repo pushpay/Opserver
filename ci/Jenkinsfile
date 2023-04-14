@@ -54,7 +54,7 @@ pipeline {
             steps {
                 script {
                     def packages = [
-                        [packageName: "StackExchange.Opserver", packageVersion: "${env.VERSION}"]
+                        [packageName: "StackExchange.Opserver", packageReferenceName: "StackExchange.Opserver", packageVersion: "${env.VERSION}"]
                     ]
 
                     octopusCreateRelease \
@@ -70,7 +70,8 @@ pipeline {
                         environment: 'test', \
                         jenkinsUrlLinkback: true, \
                         releaseNotes: true, \
-                        releaseNotesSource: 'scm'
+                        releaseNotesSource: 'scm', \
+                        verboseLogging: true
                 }
             }
         }
