@@ -26,7 +26,7 @@ pipeline {
                         serverId: 'rktapps-octopus', \
                         spaceId: 'Spaces-1', \
                         overwriteMode: 'FailIfExists', \
-                        packagePaths: '**/output/StackExchange.Opserver.${VERSION}.nupkg'
+                        packagePaths: "**/output/StackExchange.Opserver.${VERSION}.nupkg"
                 }
             }
         }
