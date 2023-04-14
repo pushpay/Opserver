@@ -66,6 +66,7 @@ pipeline {
                         packageConfigs: packages, \
                         deployThisRelease: true, \
                         cancelOnTimeout: false, \
+                        waitForDeployment: true, \
                         deploymentTimeout: '00:15:00', \
                         environment: 'test', \
                         jenkinsUrlLinkback: true, \
