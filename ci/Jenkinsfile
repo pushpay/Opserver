@@ -21,12 +21,12 @@ pipeline {
             when { branch 'pushpay_master' }
             steps {
                 script {
-                    def status = powershell(returnStatus: true, script: './build.ps1 --target "Push"')
-                    if (status != 0) {
-                        // Use SUCCESS FAILURE or ABORTED
-                        currentBuild.result = "FAILURE"
-                        throw new Exception("Exit code from Package Push: ${status}.")
-                    }
+                    octopusPushPackage \
+                        toolId: 'windows-octo', \
+                        serverId: 'rktapps-octopus', \
+                        spaceId: 'Spaces-1', \
+                        overwriteMode: 'FailIfExists', \
+                        packagePaths: './**/StackExchange.Opserver.*.nupkg'
                 }
             }
         }
@@ -53,27 +53,24 @@ pipeline {
             when { branch 'pushpay_master' }
             steps {
                 script {
-                    def triggerScript = '''
-                        D:/Tools/OctopusTools/*/Octo.exe create-release --server https://octopus.rktapps.com `
-                                                                        --apikey $($env:OCTOPUS_API_KEY) `
-                                                                        --project "Opserver" `
-                                                                        --enableservicemessages `
-                                                                        --version $($env:VERSION) `
-                                                                        --progress `
-                                                                        --ignoreSslErrors `
-                                                                        --ignoreexisting `
-                                                                        --force `
-                                                                        --deploymenttimeout 00:30:00 `
-                                                                        --waitfordeployment `
-                                                                        --package="StackExchange.Opserver":$($env:VERSION)
-                    '''
+                    def packages = [
+                        [packageName: "StackExchange.Opserver", packageVersion: "${env.VERSION}"]
+                    ]
 
-                    def status = powershell(returnStatus: true, script: triggerScript)
-                    if (status != 0) {
-                        // Use SUCCESS FAILURE or ABORTED
-                        currentBuild.result = "FAILURE"
-                        throw new Exception("Exit code Ocropus Trigger: ${status}.")
-                    }
+                    octopusCreateRelease \
+                        toolId: 'windows-octo', \
+                        serverId: 'rktapps-octopus', \
+                        spaceId: 'Spaces-1', \
+                        project: 'Opserver', \
+                        releaseVersion: "${env.VERSION}", \
+                        packageConfigs: packages, \
+                        deployThisRelease: true, \
+                        cancelOnTimeout: false, \
+                        deploymentTimeout: '00:15:00', \
+                        environment: 'test', \
+                        jenkinsUrlLinkback: true, \
+                        releaseNotes: true, \
+                        releaseNotesSource: 'scm'
                 }
             }
         }

@@ -1,7 +1,6 @@
 var target = Argument("target", "Pack");
 var configuration = Argument("configuration", "Release");
 var version = EnvironmentVariable<string>("VERSION", "1.1.0.0");
-var octopusApiKey = EnvironmentVariable<string>("OCTOPUS_API_KEY", "none");
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
@@ -55,17 +54,6 @@ Task("Pack")
                                  };
 
         NuGetPack("./Opserver/Opserver.nuspec", nuGetPackSettings);
-    });
-
-Task("Push")
-    .Does(() =>
-    {
-        var packages = GetFiles("./**/StackExchange.Opserver.*.nupkg");
-
-        NuGetPush(packages, new NuGetPushSettings {
-            ApiKey = octopusApiKey,
-            Source = "https://octopus.rktapps.com/nuget/packages"
-        });
     });
 
 //////////////////////////////////////////////////////////////////////
