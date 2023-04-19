@@ -13,7 +13,7 @@ namespace StackExchange.Opserver.Helpers
         public static readonly IHtmlString Memory = GetIcon("microchip");
         public static readonly IHtmlString Network = GetIcon("exchange");
         public static readonly IHtmlString Performance = GetIcon("bar-chart");
-        public static readonly IHtmlString Pushpay = GetIconWithColor("fa-solid fa-circle-p", "#1e2851");
+        public static readonly IHtmlString Pushpay = GetIconWithColor("fa-solid fa-circle-p", "#ea151f");
         public static readonly IHtmlString Refresh = GetIcon("refresh");
         public static readonly IHtmlString Server = GetIcon("server");
         public static readonly IHtmlString StackOverflow = GetIcon("stack-overflow");
