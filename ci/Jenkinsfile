@@ -71,8 +71,7 @@ pipeline {
                         environment: 'test', \
                         jenkinsUrlLinkback: true, \
                         releaseNotes: true, \
-                        releaseNotesSource: 'scm', \
-                        verboseLogging: true
+                        releaseNotesSource: 'scm'
                 }
             }
         }
