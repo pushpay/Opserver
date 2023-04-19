@@ -13,6 +13,7 @@ namespace StackExchange.Opserver.Helpers
         public static readonly IHtmlString Memory = GetIcon("microchip");
         public static readonly IHtmlString Network = GetIcon("exchange");
         public static readonly IHtmlString Performance = GetIcon("bar-chart");
+        public static readonly IHtmlString Pushpay = GetIconWithColor("fa-sharp fa-solid fa-circle-p", "#ea151f");
         public static readonly IHtmlString Refresh = GetIcon("refresh");
         public static readonly IHtmlString Server = GetIcon("server");
         public static readonly IHtmlString StackOverflow = GetIcon("stack-overflow");
@@ -25,5 +26,8 @@ namespace StackExchange.Opserver.Helpers
 
         private static IHtmlString GetIcon(string className) =>
             $@"<i class=""fa fa-{className}"" aria-hidden=""true""></i>".AsHtml();
+
+        private static IHtmlString GetIconWithColor(string className, string colorHex) =>
+            $@"<i class=""{className}"" style=""color: {colorHex}"" aria-hidden=""true""></i>".AsHtml();
     }
 }
