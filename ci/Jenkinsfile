@@ -97,6 +97,10 @@ def getPackageArgs (List packageNames, String packageVersion) {
     packageNames.each {
         packageArgs.add("--package=${it.trim()}:${packageVersion}")
     }
-    
-    return packageArgs.join(" ")
+
+    def args = packageArgs.join(" ")
+
+    println "Generated package args: ${args}"
+
+    return args
 }
