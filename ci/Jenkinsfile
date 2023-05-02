@@ -53,25 +53,27 @@ pipeline {
             when { branch 'pushpay_master' }
             steps {
                 script {
-                    def packages = [
-                        [packageName: "Configure IIS site", packageReferenceName: "StackExchange.Opserver", packageVersion: "${env.VERSION}"]
-                    ]
+                    def triggerScript = '''
+                        D:/Tools/OctopusTools/*/Octo.exe create-release --server https://octopus.rktapps.com `
+                                                                        --apikey $($env:OCTOPUS_API_KEY) `
+                                                                        --project "Opserver" `
+                                                                        --enableservicemessages `
+                                                                        --version $($env:VERSION) `
+                                                                        --progress `
+                                                                        --ignoreSslErrors `
+                                                                        --ignoreexisting `
+                                                                        --force `
+                                                                        --deploymenttimeout 00:15:00 `
+                                                                        --waitfordeployment `
+                                                                        --package="StackExchange.Opserver":$($env:VERSION)
+                    '''
 
-                    octopusCreateRelease \
-                        toolId: 'windows-octo', \
-                        serverId: 'rktapps-octopus', \
-                        spaceId: 'Spaces-1', \
-                        project: 'Opserver', \
-                        releaseVersion: "${env.VERSION}", \
-                        packageConfigs: packages, \
-                        deployThisRelease: true, \
-                        cancelOnTimeout: false, \
-                        waitForDeployment: true, \
-                        deploymentTimeout: '00:15:00', \
-                        environment: 'test', \
-                        jenkinsUrlLinkback: true, \
-                        releaseNotes: true, \
-                        releaseNotesSource: 'scm'
+                    def status = powershell(returnStatus: true, script: triggerScript)
+                    if (status != 0) {
+                        // Use SUCCESS FAILURE or ABORTED
+                        currentBuild.result = "FAILURE"
+                        throw new Exception("Exit code Ocropus Trigger: ${status}.")
+                    }
                 }
             }
         }
