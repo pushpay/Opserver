@@ -71,7 +71,7 @@ pipeline {
                         jenkinsUrlLinkback: true, \
                         releaseNotes: true, \
                         releaseNotesSource: 'scm', \
-                        additionalArgs: getPackageArgs(packages)
+                        additionalArgs: getPackageArgs(packages, env.VERSION)
                 }
             }
         }
