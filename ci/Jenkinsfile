@@ -54,7 +54,7 @@ pipeline {
             steps {
                 script {
                     def packages = [
-                        [packageName: "StackExchange.Opserver", packageReferenceName: "Configure IIS site", packageVersion: "${env.VERSION}"]
+                        [packageName: "Configure IIS site", packageReferenceName: "StackExchange.Opserver", packageVersion: "${env.VERSION}"]
                     ]
 
                     octopusCreateRelease \
