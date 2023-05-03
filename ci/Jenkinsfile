@@ -54,7 +54,7 @@ pipeline {
             steps {
                 script {
                     def packages = [
-                        "StackExchange.Opserver"
+                        [packageName: "StackExchange.Opserver", packageReferenceName: "", packageVersion: "${env.VERSION}"]
                     ]
 
                     octopusCreateRelease \
@@ -63,6 +63,7 @@ pipeline {
                         spaceId: 'Spaces-1', \
                         project: 'Opserver', \
                         releaseVersion: "${env.VERSION}", \
+                        packageConfigs: packages, \
                         deployThisRelease: true, \
                         cancelOnTimeout: false, \
                         waitForDeployment: true, \
@@ -70,8 +71,7 @@ pipeline {
                         environment: 'test', \
                         jenkinsUrlLinkback: true, \
                         releaseNotes: true, \
-                        releaseNotesSource: 'scm', \
-                        additionalArgs: getPackageArgs(packages, env.VERSION)
+                        releaseNotesSource: 'scm'
                 }
             }
         }
@@ -89,18 +89,4 @@ def getVersion() {
     }
 
     return "1.1.1.${BUILD_NUMBER}"
-}
-
-def getPackageArgs (List packageNames, String packageVersion) {
-    def packageArgs = []
-
-    packageNames.each {
-        packageArgs.add("--package=${it.trim()}:${packageVersion}")
-    }
-
-    def args = packageArgs.join(" ")
-
-    println "Generated package args: ${args}"
-
-    return args
 }
