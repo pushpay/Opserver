@@ -53,27 +53,25 @@ pipeline {
             when { branch 'pushpay_master' }
             steps {
                 script {
-                    def triggerScript = '''
-                        D:/Tools/OctopusTools/*/Octo.exe create-release --server https://octopus.rktapps.com `
-                                                                        --apikey $($env:OCTOPUS_API_KEY) `
-                                                                        --project "Opserver" `
-                                                                        --enableservicemessages `
-                                                                        --version $($env:VERSION) `
-                                                                        --progress `
-                                                                        --ignoreSslErrors `
-                                                                        --ignoreexisting `
-                                                                        --force `
-                                                                        --deploymenttimeout 00:15:00 `
-                                                                        --waitfordeployment `
-                                                                        --package="StackExchange.Opserver":$($env:VERSION)
-                    '''
+                    def packages = [
+                        "StackExchange.Opserver"
+                    ]
 
-                    def status = powershell(returnStatus: true, script: triggerScript)
-                    if (status != 0) {
-                        // Use SUCCESS FAILURE or ABORTED
-                        currentBuild.result = "FAILURE"
-                        throw new Exception("Exit code Ocropus Trigger: ${status}.")
-                    }
+                    octopusCreateRelease \
+                        toolId: 'windows-octo', \
+                        serverId: 'rktapps-octopus', \
+                        spaceId: 'Spaces-1', \
+                        project: 'Opserver', \
+                        releaseVersion: "${env.VERSION}", \
+                        deployThisRelease: true, \
+                        cancelOnTimeout: false, \
+                        waitForDeployment: true, \
+                        deploymentTimeout: '00:15:00', \
+                        environment: 'test', \
+                        jenkinsUrlLinkback: true, \
+                        releaseNotes: true, \
+                        releaseNotesSource: 'scm', \
+                        additionalArgs: getPackageArgs(packages, env.VERSION)
                 }
             }
         }
@@ -91,4 +89,18 @@ def getVersion() {
     }
 
     return "1.1.1.${BUILD_NUMBER}"
+}
+
+def getPackageArgs (List packageNames, String packageVersion) {
+    def packageArgs = []
+
+    packageNames.each {
+        packageArgs.add("--package=${it.trim()}:${packageVersion}")
+    }
+
+    def args = packageArgs.join(" ")
+
+    println "Generated package args: ${args}"
+
+    return args
 }
